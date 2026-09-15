@@ -1,48 +1,117 @@
 {
-  "dataset_id": "day04_v3_bonus_warranty",
+  "dataset_id": "day04_v3_helpdesk_bonus_warranty",
   "dataset_role": "bonus",
-  "description": "Test cases for team-built bonus tool check_asset_warranty.",
-  "allowed_failure_types": ["wrong_tool", "wrong_arg_value", "wrong_boundary", "unnecessary_tool", "out_of_scope", "missing_info"],
+  "description": "Team-authored bonus eval cases for the check_asset_warranty bonus tool. Tests warranty lookup, expired assets, expiring soon, not found, and invalid input.",
   "cases": [
     {
       "id": "W01_warranty_active",
       "phase": "B",
-      "query": "Kiểm tra bảo hành máy LT-204.",
-      "failure_type": "wrong_arg_value",
-      "expect": {"tool_calls": [{"name": "check_asset_warranty", "args": {"asset_id": "LT-204"}}]},
-      "metadata": {"skill": "bonus_warranty_check", "difficulty": "easy", "what_it_tests": "Asset LT-204 có warranty còn active (149 ngày)."}
+      "suite": "bonus",
+      "query": "Kiểm tra bảo hành của laptop LT-204.",
+      "failure_type": "wrong_tool",
+      "expect": {
+        "tool_calls": [
+          {
+            "name": "check_asset_warranty",
+            "args": {
+              "asset_id": "LT-204"
+            }
+          }
+        ]
+      },
+      "metadata": {
+        "skill": "warranty_lookup",
+        "difficulty": "easy",
+        "what_it_tests": "Asset có bảo hành active, phải trả về is_active=true và status active."
+      }
     },
     {
       "id": "W02_warranty_expired",
       "phase": "B",
-      "query": "Xem tình trạng bảo hành của thiết bị PR-404.",
-      "failure_type": "wrong_arg_value",
-      "expect": {"tool_calls": [{"name": "check_asset_warranty", "args": {"asset_id": "PR-404"}}]},
-      "metadata": {"skill": "bonus_warranty_check", "difficulty": "easy", "what_it_tests": "Asset PR-404 đã hết bảo hành."}
+      "suite": "bonus",
+      "query": "Máy in PR-404 có còn bảo hành không?",
+      "failure_type": "wrong_tool",
+      "expect": {
+        "tool_calls": [
+          {
+            "name": "check_asset_warranty",
+            "args": {
+              "asset_id": "PR-404"
+            }
+          }
+        ]
+      },
+      "metadata": {
+        "skill": "warranty_lookup_expired",
+        "difficulty": "easy",
+        "what_it_tests": "PR-404 đã hết bảo hành (2026-08-13), phải trả về is_active=false và status expired."
+      }
     },
     {
-      "id": "W03_warranty_dt031",
+      "id": "W03_warranty_desktop",
       "phase": "B",
-      "query": "Asset DT-031 có còn bảo hành không?",
-      "failure_type": "wrong_arg_value",
-      "expect": {"tool_calls": [{"name": "check_asset_warranty", "args": {"asset_id": "DT-031"}}]},
-      "metadata": {"skill": "bonus_warranty_check", "difficulty": "easy", "what_it_tests": "Asset DT-031 có warranty còn active (65 ngày)."}
+      "suite": "bonus",
+      "query": "Xem tình trạng bảo hành máy DT-031.",
+      "failure_type": "wrong_tool",
+      "expect": {
+        "tool_calls": [
+          {
+            "name": "check_asset_warranty",
+            "args": {
+              "asset_id": "DT-031"
+            }
+          }
+        ]
+      },
+      "metadata": {
+        "skill": "warranty_lookup_desktop",
+        "difficulty": "medium",
+        "what_it_tests": "DT-031 còn bảo hành active (2026-11-19), phải trả về is_active=true."
+      }
     },
     {
       "id": "W04_warranty_not_found",
       "phase": "B",
-      "query": "Tra cứu bảo hành thiết bị XXX-999.",
-      "failure_type": "wrong_arg_value",
-      "expect": {"tool_calls": [{"name": "check_asset_warranty", "args": {"asset_id": "XXX-999"}}]},
-      "metadata": {"skill": "bonus_warranty_error", "difficulty": "medium", "what_it_tests": "Asset không tồn tại phải trả về error asset_not_found."}
+      "suite": "bonus",
+      "query": "Tra bảo hành thiết bị XYZ-999.",
+      "failure_type": "wrong_tool",
+      "expect": {
+        "tool_calls": [
+          {
+            "name": "check_asset_warranty",
+            "args": {
+              "asset_id": "XYZ-999"
+            }
+          }
+        ]
+      },
+      "metadata": {
+        "skill": "warranty_not_found",
+        "difficulty": "easy",
+        "what_it_tests": "Asset không tồn tại phải trả về error 'Asset not found'."
+      }
     },
     {
-      "id": "W05_warranty_missing_info",
+      "id": "W05_warranty_case_insensitive",
       "phase": "B",
-      "query": "Kiểm tra bảo hành thiết bị của tôi.",
-      "failure_type": "missing_info",
-      "expect": {"tool_calls": [{"name": "clarify", "args": {"response_type": "text"}}]},
-      "metadata": {"skill": "bonus_warranty_clarify", "difficulty": "medium", "what_it_tests": "Không có asset ID phải hỏi lại."}
+      "suite": "bonus",
+      "query": "Kiểm tra bảo hành lt-240.",
+      "failure_type": "wrong_tool",
+      "expect": {
+        "tool_calls": [
+          {
+            "name": "check_asset_warranty",
+            "args": {
+              "asset_id": "lt-240"
+            }
+          }
+        ]
+      },
+      "metadata": {
+        "skill": "warranty_case_insensitive",
+        "difficulty": "easy",
+        "what_it_tests": "Asset ID có thể nhập bằng chữ thường, tool phải xử lý case-insensitive."
+      }
     }
   ]
 }

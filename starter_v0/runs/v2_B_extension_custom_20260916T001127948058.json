@@ -1,0 +1,322 @@
+{
+  "run_id": "v2_B_extension_custom_20260916T001127948058",
+  "version": "v2",
+  "artifact_version": "v2+pfa611db64138+t454674500da8",
+  "prompt_hash": "fa611db641385c267731a91044a8e68c1f7c3c29bd82fef371fb291651648072",
+  "tools_hash": "454674500da8b41c7c293b459375b6ba292b193f4c0733a9d3f814298595c280",
+  "phase": "B",
+  "suite": "extension",
+  "provider": "custom",
+  "model": "qwen3.7-flash",
+  "system_prompt": "artifacts/system_prompt_v2.md",
+  "tools": "artifacts/tools.yaml",
+  "eval_cases": "data/eval_bonus_warranty.json",
+  "dataset_id": "day04_v3_helpdesk_bonus_warranty",
+  "dataset_role": "bonus",
+  "description": "Team-authored bonus eval cases for the check_asset_warranty bonus tool. Tests warranty lookup, expired assets, expiring soon, not found, and invalid input.",
+  "generated_at": "2026-09-16T00:11:27",
+  "summary": {
+    "total_cases": 5,
+    "measured_cases": 5,
+    "provider_error_cases": 0,
+    "passed_cases": 5,
+    "case_accuracy": 1.0,
+    "tool_routing_accuracy": 1.0,
+    "argument_accuracy": 1.0,
+    "multiturn_accuracy": null,
+    "failure_counts": {},
+    "observed_mismatch_counts": {}
+  },
+  "results": [
+    {
+      "id": "W01_warranty_active",
+      "phase": "B",
+      "suite": "extension",
+      "case_suite": "bonus",
+      "is_multiturn": false,
+      "metadata": {
+        "skill": "warranty_lookup",
+        "difficulty": "easy",
+        "what_it_tests": "Asset có bảo hành active, phải trả về is_active=true và status active."
+      },
+      "input": "Kiểm tra bảo hành của laptop LT-204.",
+      "expect": {
+        "tool_calls": [
+          {
+            "name": "check_asset_warranty",
+            "args": {
+              "asset_id": "LT-204"
+            }
+          }
+        ]
+      },
+      "result": {
+        "passed": true,
+        "routing_correct": true,
+        "args_correct": true,
+        "actual_tool_calls": [
+          {
+            "name": "check_asset_warranty",
+            "args": {
+              "asset_id": "LT-204"
+            }
+          }
+        ],
+        "actual_text": "",
+        "case_failure_type": "wrong_tool",
+        "observed_mismatch": null,
+        "failure_type": null,
+        "failures": []
+      },
+      "tool_results": [
+        {
+          "tool": "check_asset_warranty",
+          "args": {
+            "asset_id": "LT-204"
+          },
+          "result": {
+            "asset_id": "LT-204",
+            "warranty_until": "2027-02-11",
+            "is_active": true,
+            "days_remaining": 148,
+            "expiration_status": "active",
+            "asset_type": "laptop",
+            "model": "ThinkPad T14 Gen 4",
+            "manufacturer": "Lenovo"
+          }
+        }
+      ]
+    },
+    {
+      "id": "W02_warranty_expired",
+      "phase": "B",
+      "suite": "extension",
+      "case_suite": "bonus",
+      "is_multiturn": false,
+      "metadata": {
+        "skill": "warranty_lookup_expired",
+        "difficulty": "easy",
+        "what_it_tests": "PR-404 đã hết bảo hành (2026-08-13), phải trả về is_active=false và status expired."
+      },
+      "input": "Máy in PR-404 có còn bảo hành không?",
+      "expect": {
+        "tool_calls": [
+          {
+            "name": "check_asset_warranty",
+            "args": {
+              "asset_id": "PR-404"
+            }
+          }
+        ]
+      },
+      "result": {
+        "passed": true,
+        "routing_correct": true,
+        "args_correct": true,
+        "actual_tool_calls": [
+          {
+            "name": "check_asset_warranty",
+            "args": {
+              "asset_id": "PR-404"
+            }
+          }
+        ],
+        "actual_text": "",
+        "case_failure_type": "wrong_tool",
+        "observed_mismatch": null,
+        "failure_type": null,
+        "failures": []
+      },
+      "tool_results": [
+        {
+          "tool": "check_asset_warranty",
+          "args": {
+            "asset_id": "PR-404"
+          },
+          "result": {
+            "asset_id": "PR-404",
+            "warranty_until": "2026-08-13",
+            "is_active": false,
+            "days_remaining": 0,
+            "expiration_status": "expired",
+            "asset_type": "printer",
+            "model": "Color LaserJet Enterprise M555dn",
+            "manufacturer": "HP"
+          }
+        }
+      ]
+    },
+    {
+      "id": "W03_warranty_desktop",
+      "phase": "B",
+      "suite": "extension",
+      "case_suite": "bonus",
+      "is_multiturn": false,
+      "metadata": {
+        "skill": "warranty_lookup_desktop",
+        "difficulty": "medium",
+        "what_it_tests": "DT-031 còn bảo hành active (2026-11-19), phải trả về is_active=true."
+      },
+      "input": "Xem tình trạng bảo hành máy DT-031.",
+      "expect": {
+        "tool_calls": [
+          {
+            "name": "check_asset_warranty",
+            "args": {
+              "asset_id": "DT-031"
+            }
+          }
+        ]
+      },
+      "result": {
+        "passed": true,
+        "routing_correct": true,
+        "args_correct": true,
+        "actual_tool_calls": [
+          {
+            "name": "check_asset_warranty",
+            "args": {
+              "asset_id": "DT-031"
+            }
+          }
+        ],
+        "actual_text": "",
+        "case_failure_type": "wrong_tool",
+        "observed_mismatch": null,
+        "failure_type": null,
+        "failures": []
+      },
+      "tool_results": [
+        {
+          "tool": "check_asset_warranty",
+          "args": {
+            "asset_id": "DT-031"
+          },
+          "result": {
+            "asset_id": "DT-031",
+            "warranty_until": "2026-11-19",
+            "is_active": true,
+            "days_remaining": 64,
+            "expiration_status": "active",
+            "asset_type": "desktop",
+            "model": "HP EliteDesk 800 G9",
+            "manufacturer": "HP"
+          }
+        }
+      ]
+    },
+    {
+      "id": "W04_warranty_not_found",
+      "phase": "B",
+      "suite": "extension",
+      "case_suite": "bonus",
+      "is_multiturn": false,
+      "metadata": {
+        "skill": "warranty_not_found",
+        "difficulty": "easy",
+        "what_it_tests": "Asset không tồn tại phải trả về error 'Asset not found'."
+      },
+      "input": "Tra bảo hành thiết bị XYZ-999.",
+      "expect": {
+        "tool_calls": [
+          {
+            "name": "check_asset_warranty",
+            "args": {
+              "asset_id": "XYZ-999"
+            }
+          }
+        ]
+      },
+      "result": {
+        "passed": true,
+        "routing_correct": true,
+        "args_correct": true,
+        "actual_tool_calls": [
+          {
+            "name": "check_asset_warranty",
+            "args": {
+              "asset_id": "XYZ-999"
+            }
+          }
+        ],
+        "actual_text": "",
+        "case_failure_type": "wrong_tool",
+        "observed_mismatch": null,
+        "failure_type": null,
+        "failures": []
+      },
+      "tool_results": [
+        {
+          "tool": "check_asset_warranty",
+          "args": {
+            "asset_id": "XYZ-999"
+          },
+          "result": {
+            "asset_id": "XYZ-999",
+            "error": "Asset not found",
+            "message": "No asset found with ID 'XYZ-999' in the inventory."
+          }
+        }
+      ]
+    },
+    {
+      "id": "W05_warranty_case_insensitive",
+      "phase": "B",
+      "suite": "extension",
+      "case_suite": "bonus",
+      "is_multiturn": false,
+      "metadata": {
+        "skill": "warranty_case_insensitive",
+        "difficulty": "easy",
+        "what_it_tests": "Asset ID có thể nhập bằng chữ thường, tool phải xử lý case-insensitive."
+      },
+      "input": "Kiểm tra bảo hành lt-240.",
+      "expect": {
+        "tool_calls": [
+          {
+            "name": "check_asset_warranty",
+            "args": {
+              "asset_id": "lt-240"
+            }
+          }
+        ]
+      },
+      "result": {
+        "passed": true,
+        "routing_correct": true,
+        "args_correct": true,
+        "actual_tool_calls": [
+          {
+            "name": "check_asset_warranty",
+            "args": {
+              "asset_id": "lt-240"
+            }
+          }
+        ],
+        "actual_text": "",
+        "case_failure_type": "wrong_tool",
+        "observed_mismatch": null,
+        "failure_type": null,
+        "failures": []
+      },
+      "tool_results": [
+        {
+          "tool": "check_asset_warranty",
+          "args": {
+            "asset_id": "lt-240"
+          },
+          "result": {
+            "asset_id": "LT-240",
+            "warranty_until": "2027-05-07",
+            "is_active": true,
+            "days_remaining": 233,
+            "expiration_status": "active",
+            "asset_type": "laptop",
+            "model": "Dell Latitude 7440",
+            "manufacturer": "Dell"
+          }
+        }
+      ]
+    }
+  ]
+}

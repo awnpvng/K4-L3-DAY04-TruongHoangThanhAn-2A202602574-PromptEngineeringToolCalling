@@ -1,65 +1,83 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime, timezone
+from datetime import date, datetime
+from pathlib import Path
 from typing import Any
 
 from tools._shared import ROOT, err
 
-ASSET_FILE = ROOT / "helpdesk_data" / "assets.json"
-WARRANTY_EXPIRING_DAYS = 30
+ASSETS_PATH = ROOT / "helpdesk_data" / "assets.json"
 
 
-def check_asset_warranty(asset_id: str = "") -> dict[str, Any]:
-    """
-    Check warranty status for a company asset.
+def check_asset_warranty(asset_id: str) -> dict[str, Any]:
+    """Check warranty status for a given asset ID.
+
+    Args:
+        asset_id: The asset ID to look up (e.g., "LT-204").
 
     Returns:
-        asset_id: The queried asset ID
-        model: Device model name
-        purchase_date: Purchase date
-        warranty_until: Warranty expiration date
-        warranty_status: "active", "expired", or "expiring_soon"
-        days_remaining: Days until warranty expires (negative if expired)
+        A dict with asset_id, warranty_until, is_active, days_remaining,
+        and expiration_status ("active", "expiring_soon", or "expired").
     """
     try:
-        data = json.loads(ASSET_FILE.read_text(encoding="utf-8"))
-        wanted_id = (asset_id or "").strip().upper()
-        asset = next(
-            (item for item in data["assets"] if item["asset_id"] == wanted_id),
-            None,
-        )
-        if asset is None:
-            return {"tool": "check_asset_warranty", "asset_id": wanted_id, "error": "asset_not_found"}
+        with open(ASSETS_PATH, encoding="utf-8") as f:
+            data = json.load(f)
 
-        warranty_until_str = asset.get("warranty_until", "")
-        if not warranty_until_str:
+        asset = None
+        for a in data.get("assets", []):
+            if a.get("asset_id", "").upper() == asset_id.upper():
+                asset = a
+                break
+
+        if not asset:
             return {
-                "tool": "check_asset_warranty",
-                "asset_id": wanted_id,
-                "error": "warranty_unknown",
-                "message": "Warranty information is not available for this asset.",
+                "asset_id": asset_id,
+                "error": "Asset not found",
+                "message": f"No asset found with ID '{asset_id}' in the inventory.",
             }
 
-        now = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
-        warranty_until = datetime.fromisoformat(warranty_until_str).replace(tzinfo=timezone.utc)
-        days_remaining = (warranty_until - now).days
+        warranty_str = asset.get("warranty_until", "")
+        if not warranty_str:
+            return {
+                "asset_id": asset_id,
+                "error": "Warranty information missing",
+                "message": f"Asset '{asset_id}' has no warranty information recorded.",
+            }
 
+        # Parse warranty date
+        try:
+            warranty_date = datetime.strptime(warranty_str, "%Y-%m-%d").date()
+        except ValueError:
+            return {
+                "asset_id": asset_id,
+                "error": "Invalid date format",
+                "message": f"Warranty date '{warranty_str}' for asset '{asset_id}' is not in valid format.",
+            }
+
+        today = date.today()
+        days_remaining = (warranty_date - today).days
+
+        # Determine status
         if days_remaining < 0:
-            warranty_status = "expired"
-        elif days_remaining <= WARRANTY_EXPIRING_DAYS:
-            warranty_status = "expiring_soon"
+            expiration_status = "expired"
+        elif days_remaining <= 30:
+            expiration_status = "expiring_soon"
         else:
-            warranty_status = "active"
+            expiration_status = "active"
 
         return {
-            "tool": "check_asset_warranty",
-            "asset_id": wanted_id,
-            "model": asset.get("model", "Unknown"),
-            "purchase_date": asset.get("purchase_date", ""),
-            "warranty_until": warranty_until_str,
-            "warranty_status": warranty_status,
-            "days_remaining": days_remaining,
+            "asset_id": asset.get("asset_id"),
+            "warranty_until": warranty_str,
+            "is_active": days_remaining >= 0,
+            "days_remaining": max(days_remaining, 0),
+            "expiration_status": expiration_status,
+            "asset_type": asset.get("type"),
+            "model": asset.get("model"),
+            "manufacturer": asset.get("manufacturer"),
         }
-    except Exception as exc:
-        return err("check_asset_warranty", exc)
+
+    except FileNotFoundError:
+        return err("check_asset_warranty", FileNotFoundError(f"Assets database not found at {ASSETS_PATH}"))
+    except Exception as e:
+        return err("check_asset_warranty", e)

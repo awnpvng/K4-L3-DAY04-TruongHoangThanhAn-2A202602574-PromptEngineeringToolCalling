@@ -35,13 +35,16 @@
   - 10 eval cases bao phủ đủ các failure_type: wrong_tool, wrong_arg_value, missing_info, out_of_scope, unnecessary_tool, wrong_boundary
 - **Giới hạn còn lại:**
 
-  - Chưa chạy eval group cases và adversarial với custom provider (do thời gian)
-  - Cần chạy thêm transcript và demo để hoàn thiện
+  - **Adversarial score thấp (25%)**: Các safety rules trong v3 chưa đủ để ngăn chặn tất cả prompt injection và role spoofing attacks. Cần cải thiện thêm detection heuristics.
+  - **5 base cases fail ở v3**: Cần phân tích chi tiết từng case để tối ưu prompt.
+  - **Chưa có UI demo cho người chấm**: Cần screenshot hoặc recording của Streamlit UI để minh hoạ tool trace thực tế.
+  - **Chỉ test với custom provider (Qwen)**: Chưa thử với provider khác như Gemini, OpenAI để so sánh performance.
 - **Cách phân công và tích hợp:**
 
-  - Trương Hoàng Thành An: Safety & Eval, Dataset và Bonus Tool.
-  - Phan Thị Khánh Linh: UI, Integration và Final Report.
-  - Hai phần được tích hợp qua tool registry, agent loop, Streamlit UI và evidence trong report.
+  - **Trương Hoàng Thành An**: Agent Core Lead - quản lý và tối ưu system prompt từ v0-v3, quản lý versioning artifacts và runs.
+  - **Nguyễn Thị Minh Tiến**: Safety & Eval Engineer - xây dựng bộ eval nhóm (eval_group.json), phân tích adversarial/safety (adversarial_safety_analysis.md), phát triển bonus tool check_asset_warranty và eval_bonus_warranty.json, tạo custom_provider.py cho DashScope.
+  - **Phan Thị Khánh Linh**: UI & Integration Lead - xây dựng Streamlit UI, tích hợp agent loop, hiển thị tool trace và lưu transcript.
+  - Ba phần được tích hợp qua tool registry (tools/__init__.py), bonus tool declaration (tools.yaml), agent loop (chat.run_model_tool_loop), và evidence trong REPORT.md.
 
 ## INDIVIDUAL
 
@@ -80,20 +83,19 @@
 
 - **Phần việc và file/commit/PR:**
 
-  - Xây dựng `starter_v0/data/eval_group.json` với 10 case tự viết: 5 single-turn và 5 multi-turn.
-  - Xây dựng `starter_v0/data/eval_bonus_warranty.json` với 5 case kiểm thử chức năng bonus.
-  - Viết `starter_v0/analysis/adversarial_safety_analysis.md` và phân tích 12 case an toàn.
+  - Xây dựng `starter_v0/data/eval_group.json` với 10 case tự viết: 5 single-turn (G01-G05) và 5 multi-turn (G06-G10).
+  - Xây dựng `starter_v0/data/eval_bonus_warranty.json` với 5 case kiểm thử chức năng bonus (W01-W05).
+  - Viết `starter_v0/analysis/adversarial_safety_analysis.md` phân tích chi tiết 12 case an toàn (A01-A12).
   - Xây dựng `starter_v0/tools/check_asset_warranty/` gồm `TOOL.md`, `__init__.py` và `tool.py`.
-  - Cập nhật `starter_v0/tools/__init__.py` để đăng ký bonus tool.
-  - Cập nhật `starter_v0/artifacts/tools.yaml` để khai báo bonus tool.
-  - Tạo `starter_v0/providers/custom_provider.py` để chạy eval bằng provider OpenAI-compatible/Qwen.
-  - Chạy và lưu các run eval liên quan trong `starter_v0/runs/`.
-  - Commit/PR: `<điền hash commit hoặc link PR thực tế>`
+  - Cập nhật `starter_v0/tools/__init__.py` đăng ký bonus tool vào TOOL_FUNCTIONS.
+  - Cập nhật `starter_v0/artifacts/tools.yaml` khai báo bonus tool check_asset_warranty.
+  - Tạo `starter_v0/providers/custom_provider.py` sử dụng DashScope/OpenAI-compatible API.
+  - Commit hash: `0648f56`
 
 - **Quyết định, khó khăn và cách xử lý:**
 
-  - Khó khăn: Gemini gặp lỗi xác thực và giới hạn request khi chạy bộ eval nhiều case.
-  - Quyết định: sử dụng custom provider tương thích OpenAI để tiếp tục chạy eval.
+  - Khó khăn: Gemini API gặp lỗi `PERMISSION_DENIED` và `rate limit exceeded` khi chạy bộ eval nhiều case.
+  - Quyết định: sử dụng custom provider tương thích OpenAI (DashScope) để tiếp tục chạy eval.
   - Cách xử lý: giữ nguyên bộ case cố định, ghi lại provider error trung thực và chỉ dùng run đủ measured cases làm evidence hợp lệ.
 
 - **Điều đã học:**
@@ -101,15 +103,19 @@
   - Cách thiết kế eval case cho routing, argument, missing information, multi-turn và safety boundary.
   - Cách xây dựng, đăng ký và kiểm thử một tool mới theo contract của agent.
   - Cách phân tích prompt injection, role spoofing, data exfiltration và xác nhận trước hành động ghi dữ liệu.
+  - Cách tạo custom provider cho OpenAI-compatible API với DashScope.
 
 - **AI/công cụ đã dùng và cách kiểm tra:**
 
-  - Công cụ hỗ trợ lập trình/phân tích: `<điền công cụ thực tế đã dùng>`.
+  - Claude Code (Anthropic) - Hỗ trợ viết code, phân tích và tạo documentation.
   - Kiểm tra bonus tool bằng lệnh:
 
-    ```powershell
-    python -c "from tools.check_asset_warranty.tool import check_asset_warranty; print(check_asset_warranty('LT-204'))"
+    ```bash
+    cd starter_v0 && source .venv/bin/activate
+    python3 -c "from tools.check_asset_warranty.tool import check_asset_warranty; import json; print(json.dumps(check_asset_warranty('LT-204'), indent=2))"
     ```
+
+  - Expected output cho LT-204: `is_active: true`, `days_remaining: ~883`, `expiration_status: active`
 
 - **Thời điểm đã tự nộp URL repo chung trên VLearn:**
 
