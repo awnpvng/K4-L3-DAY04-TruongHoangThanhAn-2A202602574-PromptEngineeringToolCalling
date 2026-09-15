@@ -76,6 +76,45 @@
 
   - 21h00 ngày 15/09/2026
 
+### Nguyễn Thị Minh Tiến — 2A202602997
+
+- **Phần việc và file/commit/PR:**
+
+  - Xây dựng `starter_v0/data/eval_group.json` với 10 case tự viết: 5 single-turn và 5 multi-turn.
+  - Xây dựng `starter_v0/data/eval_bonus_warranty.json` với 5 case kiểm thử chức năng bonus.
+  - Viết `starter_v0/analysis/adversarial_safety_analysis.md` và phân tích 12 case an toàn.
+  - Xây dựng `starter_v0/tools/check_asset_warranty/` gồm `TOOL.md`, `__init__.py` và `tool.py`.
+  - Cập nhật `starter_v0/tools/__init__.py` để đăng ký bonus tool.
+  - Cập nhật `starter_v0/artifacts/tools.yaml` để khai báo bonus tool.
+  - Tạo `starter_v0/providers/custom_provider.py` để chạy eval bằng provider OpenAI-compatible/Qwen.
+  - Chạy và lưu các run eval liên quan trong `starter_v0/runs/`.
+  - Commit/PR: `<điền hash commit hoặc link PR thực tế>`
+
+- **Quyết định, khó khăn và cách xử lý:**
+
+  - Khó khăn: Gemini gặp lỗi xác thực và giới hạn request khi chạy bộ eval nhiều case.
+  - Quyết định: sử dụng custom provider tương thích OpenAI để tiếp tục chạy eval.
+  - Cách xử lý: giữ nguyên bộ case cố định, ghi lại provider error trung thực và chỉ dùng run đủ measured cases làm evidence hợp lệ.
+
+- **Điều đã học:**
+
+  - Cách thiết kế eval case cho routing, argument, missing information, multi-turn và safety boundary.
+  - Cách xây dựng, đăng ký và kiểm thử một tool mới theo contract của agent.
+  - Cách phân tích prompt injection, role spoofing, data exfiltration và xác nhận trước hành động ghi dữ liệu.
+
+- **AI/công cụ đã dùng và cách kiểm tra:**
+
+  - Công cụ hỗ trợ lập trình/phân tích: `<điền công cụ thực tế đã dùng>`.
+  - Kiểm tra bonus tool bằng lệnh:
+
+    ```powershell
+    python -c "from tools.check_asset_warranty.tool import check_asset_warranty; print(check_asset_warranty('LT-204'))"
+    ```
+
+- **Thời điểm đã tự nộp URL repo chung trên VLearn:**
+
+  - 21h00 ngày 15/09/2026
+
 ### Phan Thị Khánh Linh — 2A202602360
 
 - **Phần việc và file/commit/PR:**
