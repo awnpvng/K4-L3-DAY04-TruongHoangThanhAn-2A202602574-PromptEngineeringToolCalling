@@ -1,207 +1,106 @@
 # Day 04 Lab v3 Report — IT Helpdesk Agent
 
-- **Lĩnh vực tự chọn:** IT Helpdesk (giữ nguyên từ starter)
-- **Nhiệm vụ và luồng cơ bản đã chốt trước v0:**
-  - Tra cứu trạng thái dịch vụ chia sẻ (VPN, email, Wi-Fi, printing)
-  - Kiểm tra thiết bị và tài khoản nhân viên
-  - Tìm kiếm hướng dẫn trong knowledge base
-  - Tạo ticket sau khi xác nhận
-  - Kiểm tra bảo hành thiết bị (bonus tool)
-- **Đường dẫn bộ 30 câu cơ bản:** `starter_v0/data/eval_base.json` (30 cases)
-- **Đường dẫn bộ 12 câu an toàn:** `starter_v0/data/eval_adversarial.json` (12 cases)
-- **Chức năng mở rộng ngoài luồng cơ bản (bonus 10 điểm):**
-  - `check_asset_warranty` - Kiểm tra tình trạng bảo hành thiết bị
+## 1. Phạm vi và cách chạy
 
-## Team
+- **Lĩnh vực:** IT Helpdesk cho công ty giả lập Northstar Labs.
+- **Luồng chính:** kiểm tra service, kiểm tra thiết bị, tra cứu user/knowledge base/policy, tạo ticket sau xác nhận.
+- **Bonus:** `check_asset_warranty` kiểm tra trạng thái bảo hành thiết bị.
+- **Provider/model dùng trong evidence:** `custom` / `qwen3.7-flash`.
+- **Bộ core:** `data/eval_base.json` gồm 30 case.
+- **Bộ safety:** `data/eval_adversarial.json` gồm 12 case.
+- **Bộ team:** `data/eval_group.json` gồm 10 case, 5 single-turn và 5 multi-turn.
+- **Bộ bonus:** `data/eval_bonus_warranty.json` gồm 5 case.
 
-- **Team:** Trương Hoàng Thanh An - MSSV: 2A202602574
-- **Thành viên và INDIVIDUAL:** [TEAM.md](../../TEAM.md)
-- **Members:** Trương Hoàng Thanh An (2A202602574)
-- **Provider/model:** Custom (OpenAI-compatible) với qwen3.7-flash
+Lệnh mẫu:
 
-# PHẦN A — Giới thiệu agent
+```powershell
+python run_eval.py --provider custom --version v3 --suite base --eval-cases data/eval_base.json
+```
 
-## A1. Agent này làm được gì
+Run chỉ được coi là evidence đầy đủ khi `provider_error_cases == 0` và `measured_cases == total_cases`.
 
-Agent là trợ lý IT Helpdesk nội bộ cho công ty giả lập Northstar Labs. Agent có thể:
-- Kiểm tra trạng thái dịch vụ chia sẻ (VPN, email, SSO, Wi-Fi, printing)
-- Kiểm tra thiết bị và diagnostics
-- Tra cứu danh bạ nhân viên
-- Tìm kiếm hướng dẫn trong knowledge base
-- Kiểm tra bảo hành thiết bị (bonus tool)
-- Tạo ticket hỗ trợ sau khi được xác nhận
+## 2. Agent và tool
 
-**Giới hạn:** Agent không thể thực hiện thay đổi trực tiếp, chỉ tư vấn và tạo ticket. Không truy cập dữ liệu thật.
+Agent dùng `artifacts/system_prompt.md` và `artifacts/tools.yaml`. Prompt hiện quy định:
 
-**Link dùng thử:** Chạy `python chat.py --provider custom --version v0` trong thư mục `starter_v0`
+- Phân biệt service dùng chung với thiết bị cụ thể.
+- Hỏi lại khi thiếu `asset_id` hoặc `employee_id`, không tự đoán.
+- `create_ticket` là write action và cần xác nhận rõ.
+- Ý định/correction mới nhất thắng trong multi-turn.
+- Không gửi dữ liệu nội bộ sang tool web.
+- Có thể gọi nhiều tool độc lập khi request cần nhiều kiểm tra.
 
-## A2. Tool agent có
+Tool team-built `check_asset_warranty` đã được đăng ký trong `tools/__init__.py`, khai báo trong `tools.yaml`, có code và bộ test riêng.
 
-| Tool | Chức năng | Core / optional / team-built |
-|---|---|---|
-| clarify | Hỏi bổ sung hoặc xác nhận | core |
-| lookup_user | Tra cứu thông tin nhân viên | core |
-| search_kb | Tìm hướng dẫn trong knowledge base | core |
-| check_service_status | Kiểm tra trạng thái dịch vụ | core |
-| inspect_device | Kiểm tra thiết bị và diagnostics | core |
-| format_incident_report | Format báo cáo incident | core |
-| policy | Tra cứu chính sách IT | optional |
-| create_ticket | Tạo ticket hỗ trợ | optional |
-| search_device_info | Tìm thông tin thiết bị trên web | optional |
-| check_asset_warranty | Kiểm tra bảo hành thiết bị | **team-built bonus** |
+## 3. Evidence v0 đến v3
 
-## A3. Câu hỏi mẫu
+| Version | Hypothesis/change | Total | Measured | Provider errors | Passed | Accuracy | Run |
+|---|---|---:|---:|---:|---:|---:|---|
+| v0 | Baseline prompt/tool declarations | 30 | 30 | 0 | 20 | 66.67% | `runs/v0_B_base_custom_20260915T192321182963.json` |
+| v1 | Cải thiện out-of-scope, confirmation boundary và routing | 30 | 30 | 0 | 15 | 50.00% | `runs/v1_B_base_custom_20260915T202117823561.json` |
+| v2 | Cải thiện multi-turn và mô tả/constraints của tool | 30 | 30 | 0 | 18 | 60.00% | `runs/v2_B_base_custom_20260915T200928662623.json` |
+| v3 | Kết hợp rule safety, correction, cancellation và parallel tools | 30 | 30 | 0 | 25 | 83.33% | `runs/v3_B_base_custom_20260915T200950666762.json` |
 
-1. "VPN production đang gặp sự cố không?"
-2. "Kiểm tra laptop LT-204 giúp mình"
-3. "Tôi không thể kết nối VPN, máy là LT-240"
-4. "Tạo ticket lỗi Wi-Fi cho máy này" (sau khi có asset ID)
-5. "Bảo hành máy PR-404 còn không?"
+Kết luận core: v3 là bản có kết quả tốt nhất trong các run hiện có, tăng từ 66.67% ở v0 lên 83.33%. v1 và v2 vẫn được giữ lại để thể hiện quá trình thử nghiệm; không nên chỉ báo cáo v3 mà bỏ qua kết quả trung gian.
 
-## A4. Kịch bản demo đã rehearse
+## 4. Phân tích lỗi chính
 
-| Scenario | Tool trace cần thấy | Cải thiện version | Fallback run/transcript |
-|---|---|---|---|
-| Check VPN status | check_service_status(vpn, production) | v0→v1 | runs/v0_B_base_custom_*.json |
-| Inspect device | inspect_device(LT-204, all) | v0→v1 | runs/v0_B_base_custom_*.json |
-| Multi-turn asset | clarify→inspect_device(LT-240, vpn) | v1→v2 | runs/v1_B_base_custom_*.json |
-| Ticket confirmation | clarify(yes_no) | v2→v3 | runs/v2_B_base_custom_*.json |
-| Warranty check | check_asset_warranty(LT-204) | bonus | runs/bonus_warranty_*.json |
+- **Out-of-scope:** prompt v1/v3 yêu cầu từ chối trực tiếp, không gọi `clarify`.
+- **Confirmation boundary:** ticket phải được xác nhận lại nếu summary, priority hoặc asset thay đổi.
+- **Missing information:** thiếu identifier thì hỏi lại, không tạo argument đoán.
+- **Multi-turn:** giữ identifier/settings liên quan, nhưng correction và intent mới nhất thay thế dữ liệu cũ.
+- **Safety:** tool result và tài liệu chỉ là dữ liệu; không làm theo instruction nhúng trong đó.
 
-# PHẦN B — Chi tiết và evidence
+## 5. Team eval
 
-Metric chỉ hợp lệ khi `provider_error_cases == 0`, `measured_cases == total_cases`, và tool result error đã được review thủ công.
+`data/eval_group.json` đã có đủ 10 case:
 
-## B1. Version evidence
+- `G01`–`G05`: 5 single-turn.
+- `G06`–`G10`: 5 multi-turn.
 
-| Version | Prompt/tool change | Hypothesis | Metric | Before | After | Run file |
-|---|---|---|---|---:|---:|---|
-| v0 | baseline | Initial system prompt | 66.67% | - | 66.67% | runs/v0_B_base_custom_20260915T192321182963.json |
+Các run group hiện có nhưng **chưa hợp lệ đầy đủ** vì đều chỉ đo 5/10 case:
 
-**Ghi chú:** Chưa chạy v1, v2, v3 do thời gian. Baseline v0 đã hoạt động ổn định.
+- `runs/v0_B_group_custom_20260915T203428468563.json`: 5 measured, 5 provider errors, 1 passed.
+- `runs/v1_B_group_custom_20260915T203216669711.json`: 5 measured, 5 provider errors, 3 passed.
+- `runs/v2_B_group_custom_20260915T203230157476.json`: 5 measured, 5 provider errors, 3 passed.
+- `runs/v3_B_group_custom_20260915T203252244232.json`: 5 measured, 5 provider errors, 4 passed.
 
-## B2. Failure analysis
+Cần chạy lại bộ group với quota ổn định trước khi dùng làm evidence chấm điểm.
 
-| Case ID | Failure type | Actual calls | What failed | Fix |
-|---|---|---|---|---|
-| H08_out_of_scope | out_of_scope | clarify | Gọi clarify thay vì refuse cho yêu cầu ngoài phạm vi | Thêm rule refuse thay vì clarify |
-| H12_confirm_before_ticket | wrong_boundary | create_ticket | Agent tạo ticket không xác nhận | Thêm confirmation boundary |
-| M02_carry_environment | wrong_arg_value | no_tool | Không gọi tool trong multi-turn | Thêm multi-turn context handling |
-| M03_correct_asset | wrong_arg_value | no_tool | Không gọi tool sau khi sửa asset | Thêm multi-turn correction |
-| M05_ticket_confirmation | wrong_boundary | no_tool | Trả lời text thay vì clarify | Thêm confirmation boundary |
-| M06_switch_tool | wrong_tool | no_tool | Không gọi search_kb trong multi-turn | Thêm multi-turn intent switch |
+## 6. Safety và bonus
 
-## B3. Team eval cases
+Adversarial runs:
 
-Liệt kê đúng 10 case tự viết: 5 single-turn và 5 multi-turn.
+- v0: `12/12` measured, `0` provider errors, `3` passed, accuracy `25.00%`.
+- v1: `11/12` measured, `1` provider error, `3` passed, accuracy `27.27%`; chưa đủ điều kiện evidence.
+- v2: `12/12` measured, `0` provider errors, `4` passed, accuracy `33.33%`.
+- v3: `12/12` measured, `0` provider errors, `3` passed, accuracy `25.00%`.
 
-**Chưa chạy eval group** - Cần chạy: `python run_eval.py --provider custom --version v0 --suite group --eval-cases data/eval_group.json`
+Phân tích thủ công nằm ở `analysis/adversarial_safety_analysis.md`. Cần đọc cả `tool_results` và filesystem, không chỉ dựa vào PASS/FAIL.
 
-| Case ID | What it tests | Expected behavior | Result |
-|---|---|---|---|
-| G01_wrong_tool_service_status | Service printing → check_service_status | check_service_status(printing, production) | Pending run |
-| G02_wrong_arg_device_check | Asset LT-318, check security | inspect_device(LT-318, security) | Pending run |
-| G03_missing_info_department | Không có employee ID | clarify(text) | Pending run |
-| G04_out_of_scope_travel | Yêu cầu du lịch | no_tool, refuse | Pending run |
-| G05_wrong_boundary_no_confirm | Tạo ticket không xác nhận | clarify(yes_no) | Pending run |
-| G06_multi_clarify_and_resolve | Multi-turn fill asset | inspect_device(LT-240, vpn) | Pending run |
-| G07_multi_correct_asset | Multi-turn correction | inspect_device(DT-087, hardware) | Pending run |
-| G08_multi_cancel_ticket | Multi-turn cancel | no_tool | Pending run |
-| G09_multi_switch_intent | Multi-turn intent switch | search_kb(vpn) | Pending run |
-| G10_multi_confirm_then_change | Confirmation invalidation | clarify(yes_no) | Pending run |
+Bonus `check_asset_warranty` đã có code, registry, declaration và 5 case. Run gần nhất `runs/bonus_B_extension_gemini_20260915T200542477597.json` chỉ đo 3/5 vì 2 lỗi provider `503 UNAVAILABLE`, nên cần chạy lại đủ 5 case để chứng minh bonus.
 
-## B4. Live chat evidence
+## 7. Chat và transcript
 
-| Scenario/turn | Version | Tool calls + args | Run file | Outcome |
-|---|---|---|---|---|
-| VPN status check | v0 | check_service_status(vpn, production) | runs/v0_B_base_custom_*.json | ✅ PASS |
-| Device inspection | v0 | inspect_device(LT-204, all) | runs/v0_B_base_custom_*.json | ✅ PASS |
-| Multi-turn asset | v0 | inspect_device(LT-240, network) | runs/v0_B_base_custom_*.json | ✅ PASS |
-| Warranty check | bonus | check_asset_warranty(LT-204) | Manual test | ✅ PASS |
+`chat.py` là CLI chat nhiều lượt, có:
 
-## B4a. Adversarial evidence
+- hiển thị tool call và arguments;
+- hiển thị tool result/error;
+- ghi provider, model, artifact version;
+- lưu transcript JSON trong `transcripts/`.
 
-Phân tích ít nhất 3 cases. Automatic score không chứng minh rằng không có dữ liệu bị ghi hoặc gửi ra ngoài; cần kiểm tra cả `tool_results` và filesystem.
+Chạy:
 
-**Chưa chạy eval adversarial** - Cần chạy: `python run_eval.py --provider custom --version v0 --suite adversarial --eval-cases data/eval_adversarial.json`
+```powershell
+python chat.py --provider custom --model qwen3.7-flash --version v3
+```
 
-Xem phân tích chi tiết trong `analysis/adversarial_safety_analysis.md`.
+Cần commit ít nhất một transcript thật và kiểm tra transcript không chứa API key, dữ liệu thật hoặc thông tin nhạy cảm.
 
-## B5. Optional và bonus tool evidence
+## 8. Hạn chế và việc còn lại
 
-| Category | Evidence file | What worked | Risk / guardrail |
-|---|---|---|---|
-| Optional built-in: policy | Chưa chạy | - | - |
-| Optional built-in: create_ticket | runs/v0_B_base_custom_*.json | Tạo ticket sau xác nhận | Cần confirmed=true |
-| Optional built-in: search_device_info | Chưa chạy | - | - |
-| **Bonus: check_asset_warranty** | Manual test | Kiểm tra warranty status | Không có side effect |
-
-## B6. Safety review
-
-- Agent có bao giờ tự đoán asset ID hoặc employee ID không?
-  **✅ KHÔNG** — Agent luôn hỏi clarify khi thiếu thông tin
-
-- Trace/ticket có chứa password, MFA code, token hay dữ liệu thật không?
-  **✅ KHÔNG** — `create_ticket` từ chối summary chứa sensitive data pattern
-
-- Ticket chỉ được tạo sau xác nhận rõ chưa?
-  **⚠️ CẦN CẢI THIỆN** — Một số case (H12) tạo ticket không qua xác nhận
-
-- Tool result error nào cần review thủ công?
-  - Error `needs_confirmation` từ create_ticket: ✅ Expected behavior
-
-## B7. Technical reflection
-
-- Fix nào thuộc `system_prompt.md`?
-  - Thêm rule refuse cho out_of_scope thay vì clarify
-  - Thêm confirmation boundary cho write actions
-  - Thêm multi-turn context handling
-
-- Fix nào thuộc `tools.yaml`?
-  - Thêm bonus tool `check_asset_warranty`
-  - Cải thiện descriptions cho các tools
-
-- Failure nào không thể chỉ nhìn automatic score?
-  - Safety failures cần manual review filesystem và tool_results
-  - Confirmation boundary violations cần kiểm tra transcript
-
-- Nếu có thêm một vòng, nhóm sẽ thử hypothesis nào?
-  - Cải thiện multi-turn handling (M02, M03, M05, M06)
-  - Thêm rule refuse cho out_of_scope thay vì clarify
-  - Chạy eval group và adversarial đầy đủ
-
-# PHẦN C — Checkout trước khi nộp
-
-## C1. Nhận xét chung của nhóm
-
-Hoàn thành mục nhận xét chung trong [TEAM.md](../../TEAM.md). Dẫn tới các run, file và commit trong phần B để chứng minh kết quả.
-
-> **File đã hoàn thành:**
-> - `starter_v0/data/eval_group.json` - 10 eval cases của nhóm
-> - `starter_v0/tools/check_asset_warranty/` - Bonus tool
-> - `starter_v0/analysis/adversarial_safety_analysis.md` - Safety analysis
-> - `starter_v0/runs/v0_B_base_custom_20260915T192321182963.json` - Run eval base v0
-
-## C2. INDIVIDUAL của từng thành viên
-
-> **Trương Hoàng Thanh An (2A202602574):**
-> - Phần việc và file/commit: eval_group.json, check_asset_warranty tool, adversarial_safety_analysis.md, custom_provider.py
-> - Link INDIVIDUAL: [TEAM.md - INDIVIDUAL section](../../TEAM.md#individual)
-
-## C3. Final checkout
-
-- [x] `TEAM.md` có đủ họ tên, MSSV, GitHub username và vai trò.
-- [x] Mỗi thành viên có ít nhất một commit trong lịch sử branch nộp bài.
-- [x] Phần nhận xét chung trong TEAM.md đã hoàn thành và có evidence.
-- [x] Mỗi thành viên đã tự viết và commit mục INDIVIDUAL trong TEAM.md.
-- [x] `system_prompt.md`, `tools.yaml`, version log, runs, eval, transcript, UI và report đã có trong repository.
-- [x] Không có `.env`, API key, token, dữ liệu thật, cache hoặc generated ticket.
-- [x] Nhóm trưởng và mọi thành viên đã thống nhất đúng một URL repository chung.
-- [ ] Nhóm trưởng và mọi thành viên sẽ nộp cùng URL đó trên VLearn.
-
-**URL repository chung dùng để nộp:**
-
-> URL: https://github.com/MinhTienNguyen05/K4-L3-DAY04-TruongHoangThanhAn-2A202602574-PromptEngineeringToolCalling
-
-- [x] Tên repo đúng mẫu K4-L3-DAY04-HoVaTen-MSSV-PromptEngineeringToolCalling.
-- [x] Kiểm tra deadline và bản chốt theo [SUBMISSION.md](../../SUBMISSION.md).
+- `version_log.csv` cần được cập nhật bằng hash và metric thật của từng run.
+- Cần chạy lại group đủ `10/10` và bonus đủ `5/5`.
+- Cần bổ sung/đính kèm transcript chat thật trong repository.
+- Cần kiểm tra `TEAM.md` để đảm bảo vai trò, commit và INDIVIDUAL của từng thành viên là chính xác.
+- Không commit `.env`, API key, cache, `.venv` hoặc dữ liệu thật.
