@@ -1,0 +1,39 @@
+{
+  "session_id": "ui_7bb981df83e24d4eb8f21d16135e9353",
+  "version": "v3",
+  "artifact_version": "v3+p27467914bc4d+td4848549884e",
+  "timestamp": "2026-09-15T11:40:54+00:00",
+  "updated_at": "2026-09-15T11:53:22+00:00",
+  "provider": "openrouter",
+  "model": null,
+  "system_prompt": "artifacts/system_prompt.md",
+  "tools": "artifacts/tools.yaml",
+  "messages": [
+    {
+      "timestamp": "2026-09-15T11:41:12+00:00",
+      "user_input": "eghdujsdsnfs",
+      "assistant_text": "Provider error: RuntimeError: Missing API key env var: OPENROUTER_API_KEY",
+      "tool_calls": [],
+      "tool_results": [],
+      "error_logs": [
+        {
+          "type": "RuntimeError",
+          "message": "Missing API key env var: OPENROUTER_API_KEY"
+        }
+      ]
+    },
+    {
+      "timestamp": "2026-09-15T11:53:22+00:00",
+      "user_input": "con cá có mấy chân ",
+      "assistant_text": "Provider error: RuntimeError: Missing API key env var: OPENROUTER_API_KEY",
+      "tool_calls": [],
+      "tool_results": [],
+      "error_logs": [
+        {
+          "type": "RuntimeError",
+          "message": "Missing API key env var: OPENROUTER_API_KEY"
+        }
+      ]
+    }
+  ]
+}

@@ -77,6 +77,23 @@ python run_eval.py --provider openrouter --version v0 --suite base --eval-cases 
 
 Thay `openrouter` bằng `openai`, `anthropic` hoặc `gemini` khi dùng provider khác. Không commit `.env`.
 
+## Chạy Web UI
+
+UI Streamlit nằm tại `starter_v0/app.py`. UI dùng chung agent loop với CLI, hiển thị version artifact, lịch sử hội thoại, tool call, arguments, tool result/error và tự lưu transcript đã redact.
+
+```powershell
+cd starter_v0
+.\.venv\Scripts\Activate.ps1
+python -m pip install -r requirements.txt
+streamlit run app.py
+```
+
+Sau khi chạy, mở URL mà Streamlit in ra (thường là `http://localhost:8501`). Trong Sidebar, chọn provider, version (`v0` đến `v3`) và model nếu cần. Provider phải có API key trong `.env` trước khi gửi message.
+
+Transcript được ghi vào `starter_v0/transcripts/` sau mỗi message với `session_id`, `version`, timestamp, user input, assistant text, tool calls, tool results và error logs. UI redact các mẫu password, token, API key, OTP, MFA và recovery code trước khi hiển thị/lưu. Kiểm tra transcript trước khi commit; không commit `.env`, dữ liệu thật hoặc `tickets/`.
+
+Để kiểm tra đủ các luồng minh chứng, hãy chạy một yêu cầu bình thường, một yêu cầu thiếu asset ID, một hội thoại nhiều lượt và một yêu cầu tạo ticket có xác nhận. UI không che lỗi tool; lỗi phải được giữ lại trong trace và transcript.
+
 ## Tài liệu cần đọc
 
 | File | Dùng khi |

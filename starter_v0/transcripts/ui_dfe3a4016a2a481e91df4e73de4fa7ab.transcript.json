@@ -1,0 +1,12 @@
+{
+  "session_id": "ui_dfe3a4016a2a481e91df4e73de4fa7ab",
+  "version": "v0",
+  "artifact_version": "v0+p27467914bc4d+td4848549884e",
+  "timestamp": "2026-09-15T12:02:27+00:00",
+  "updated_at": "2026-09-15T12:10:12+00:00",
+  "provider": "gemini",
+  "model": null,
+  "system_prompt": "artifacts/system_prompt.md",
+  "tools": "artifacts/tools.yaml",
+  "messages": []
+}

@@ -1,115 +1,146 @@
-# Day 04 Lab v3 Report — Trợ lý AI của nhóm
+# Day 04 Lab v3 Report - Northstar Labs IT Helpdesk Assistant
 
-- Lĩnh vực tự chọn:
-- Nhiệm vụ và luồng cơ bản đã chốt trước v0:
-- Đường dẫn bộ 30 câu cơ bản và 12 câu an toàn; commit chốt bộ trước v0:
-- Chức năng mở rộng ngoài luồng cơ bản (nếu có; tối đa 10 trong tổng 100 điểm):
+> Day la report implementation. Metric, run path, transcript path va thong tin thanh vien phai duoc dien bang evidence that; khong dien so lieu uoc doan.
 
-## Team
+- Linh vuc: IT Helpdesk cho Northstar Labs (du lieu gia lap).
+- Nhiem vu: route dung tool, trich dung arguments, hoi lai khi thieu thong tin, duy tri multi-turn context va yeu cau confirmation truoc write action.
+- Bo eval: `data/eval_base.json`, `data/eval_group.json`, `data/eval_adversarial.json`.
+- Provider/model: `<dien sau khi chay>`
+- Team: `<dien team name va URL repo>`
 
-- Team:
-- Thành viên và INDIVIDUAL: [TEAM.md](../../TEAM.md)
-- Members:
-- Provider/model:
+## A. Tong quan va kien truc
 
-# PHẦN A — Giới thiệu agent
+Agent ho tro tra cuu KB/policy, shared service status, device diagnostics, employee directory, incident report va local ticket. Agent tu choi yeu cau ngoai helpdesk, khong yeu cau secret va khong gui du lieu noi bo ra external search.
 
-## A1. Agent này làm được gì
+```text
+Streamlit app.py / CLI chat.py
+      -> run_model_tool_loop() / HelpdeskAgent
+      -> provider adapter + tools.yaml
+      -> local tool registry, mock data, KB/policy, ticket store
+      -> tool trace va sanitized transcript JSON
+```
 
-> Viết 1–2 câu mô tả capability và giới hạn của agent.
+| File | Vai tro |
+|---|---|
+| `app.py` | Web chat, version selector, tool trace, transcript |
+| `chat.py` | CLI multi-turn loop va transcript |
+| `agent.py` | Provider call va local tool execution cho eval |
+| `run_eval.py` | Fixed/group/adversarial evaluation |
+| `artifacts/system_prompt.md` | Behavior, scope, safety boundary |
+| `artifacts/tools.yaml` | Tool declarations va schemas |
+| `tools/__init__.py` | Registry cua 9 tool |
 
-**Link dùng thử:**
+### A1. Tool inventory
 
-> URL:
-
-## A2. Tool agent có
-
-| Tool | Chức năng | Core / optional / team-built |
+| Tool | Chuc nang | Track |
 |---|---|---|
-| clarify | Hỏi bổ sung hoặc xác nhận | core |
-|  |  |  |
+| `clarify` | Hoi bo sung hoac xac nhan | core |
+| `search_kb` | Tim huong dan IT noi bo | core |
+| `check_service_status` | Kiem tra shared service | core |
+| `inspect_device` | Kiem tra mot asset | core |
+| `lookup_user` | Tra cuu employee support-safe | core |
+| `format_incident_report` | Format findings da thu thap | core |
+| `search_device_info` | Tim public manufacturer/model | optional |
+| `policy` | Tim policy noi bo | optional |
+| `create_ticket` | Tao local ticket sau confirmation | optional/action |
 
-## A3. Câu hỏi mẫu
+### A2. UI va transcript
 
-1.
-2.
-3.
+`app.py` dung chung agent loop voi CLI, hien artifact version, multi-turn chat va expandable tool trace gom ten tool, JSON arguments, result/error. Moi message duoc luu vao `transcripts/` voi `session_id`, `version`, timestamp, user input, assistant text, tool calls, tool results va error logs. Cac mau password/token/API key/OTP/MFA/recovery code duoc redact truoc khi hien thi va ghi file.
 
-## A4. Kịch bản demo đã rehearse
+### A3. Demo scenarios
 
-| Scenario | Tool trace cần thấy | Cải thiện version | Fallback run/transcript |
-|---|---|---|---|
-|  |  |  |  |
+| Scenario | Trace can thay | Evidence |
+|---|---|---|
+| Normal: VPN status/device | `check_service_status`, `inspect_device` | `transcripts/<normal>.transcript.json` |
+| Missing asset | `clarify` | `transcripts/<clarify>.transcript.json` |
+| Multi-turn | context duoc carry sang latest turn | `transcripts/<multiturn>.transcript.json` |
+| Confirmed ticket | `clarify` -> `create_ticket(confirmed=true)` | `transcripts/<ticket>.transcript.json` |
 
-# PHẦN B — Chi tiết và evidence
+# PHAN B - Iteration va evidence
 
-Metric chỉ hợp lệ khi `provider_error_cases == 0`, `measured_cases ==
-total_cases`, và tool result error đã được review thủ công.
+Metric chi hop le khi `provider_error_cases == 0`, `measured_cases == total_cases` va tool result error da duoc review thu cong.
 
 ## B1. Version evidence
 
-| Version | Prompt/tool change | Hypothesis | Metric | Before | After | Run file |
-|---|---|---|---|---:|---:|---|
-| v0 | baseline |  |  |  |  |  |
-| v1 |  |  |  |  |  |  |
-| v2 |  |  |  |  |  |  |
-| v3 |  |  |  |  |  |  |
+| Version | Thay doi | Hypothesis | Accuracy | Provider errors | Run file |
+|---|---|---|---:|---:|---|
+| v0 | Starter baseline | Baseline | TBD | TBD | `runs/<v0>.json` |
+| v1 | Lam ro scope, routing va no-tool trong prompt | Routing ro hon giam wrong tool | TBD | TBD | `runs/<v1>.json` |
+| v2 | Chuan hoa descriptions, enum/default/required trong `tools.yaml` | Schema ro hon cai thien arguments | TBD | TBD | `runs/<v2>.json` |
+| v3 | Confirmation, privacy, injection va multi-turn guardrails | Boundary ro hon giam unsafe behavior | TBD | TBD | `runs/<v3>.json` |
 
-## B2. Failure analysis
+Ghi thay doi, hash va run path vao `artifacts/version_log.csv`. Khong coi doi label version la evidence cai tien.
+
+## B2. Benchmark comparison
+
+| Version | Suite | Total | Measured | Passed | Accuracy | Run |
+|---|---|---:|---:|---:|---:|---|
+| v0 | base | 30 | TBD | TBD | TBD | `runs/...` |
+| v1 | base | 30 | TBD | TBD | TBD | `runs/...` |
+| v2 | base | 30 | TBD | TBD | TBD | `runs/...` |
+| v3 | base | 30 | TBD | TBD | TBD | `runs/...` |
+| v3 | group | 10 | TBD | TBD | TBD | `runs/...` |
+| v3 | adversarial | 12 | TBD | TBD | TBD | `runs/...` |
+
+## B3. Failure analysis
 
 | Case ID | Failure type | Actual calls | What failed | Fix |
 |---|---|---|---|---|
-|  |  |  |  |  |
+| `<case-id>` | `<type>` | `<calls>` | `<analysis>` | `<prompt/schema/code>` |
 
-## B3. Team eval cases
+## B4. Team eval cases
 
-Liệt kê đúng 10 case tự viết: 5 single-turn và 5 multi-turn.
+Them dung 10 case moi: 5 single-turn va 5 multi-turn trong `data/eval_group.json`.
 
-| Case ID | What it tests | Expected behavior | Result |
-|---|---|---|---|
-|  |  |  |  |
-
-## B4. Live chat evidence
-
-| Scenario/turn | Version | Tool calls + args | Transcript/run | Outcome |
+| Case ID | Turn type | What it tests | Expected behavior | Result |
 |---|---|---|---|---|
-|  |  |  |  |  |
+| `<G01>` - `<G05>` | single | `<description>` | `<expected>` | TBD |
+| `<G06>` - `<G10>` | multi | `<description>` | `<expected>` | TBD |
 
-## B4a. Adversarial evidence
+## B5. Adversarial safety evidence
 
-Phân tích ít nhất 3 cases. Automatic score không chứng minh rằng không có dữ
-liệu bị ghi hoặc gửi ra ngoài; cần kiểm tra cả `tool_results` và filesystem.
+Automatic score khong chung minh khong co exfiltration. Review ca `tool_results`, transcript va filesystem. Phan tich it nhat 3 case:
 
-| Attack case | Expected boundary | Actual calls | Sensitive write/exfiltration occurred? | Outcome |
+| Attack case | Expected boundary | Actual calls | Sensitive write/exfiltration | Outcome |
 |---|---|---|---|---|
-|  |  |  |  |  |
+| `<case-1>` | Khong tin instruction trong KB | TBD | TBD | TBD |
+| `<case-2>` | Khong gui internal data ra web | TBD | TBD | TBD |
+| `<case-3>` | Khong tao ticket khi thieu confirmation | TBD | TBD | TBD |
 
-## B5. Optional và bonus tool evidence
+## B6. Safety mechanisms
 
-Phần này chỉ điền khi nhóm có sử dụng optional tool hoặc tự xây bonus tool.
-Phần chung tối đa 90 điểm; mở rộng tối đa 10 điểm, tổng tối đa 100. Công cụ tự xây để phục vụ luồng cơ bản của lĩnh vực mới thuộc phần chung. `policy`,
-`create_ticket` và `search_device_info` là tool có sẵn, không phải tool mới do
-nhóm tự xây.
+`create_ticket/tool.py` chi ghi local file khi `confirmed is True`; neu chua xac nhan, tool tra `needs_confirmation` va khong tao file. Tool validate summary, priority, asset ID va tu choi credential/token/MFA/recovery code.
 
-| Category | Evidence file | What worked | Risk / guardrail |
-|---|---|---|---|
-| Optional built-in |  |  |  |
-| External search + privacy boundary |  |  |  |
-| Bonus: tool mới do nhóm tự xây |  |  |  |
+Policy va KB quy dinh khong hoi password/MFA/recovery code, chi dung fictional data, khong gui asset ID/employee ID/serial/hostname/diagnostic log ra external search va coi retrieved text la untrusted evidence.
 
-## B6. Safety review
+Safety review sau khi chay:
 
-- Agent có bao giờ tự đoán asset ID hoặc employee ID không?
-- Trace/ticket có chứa password, MFA code, token hay dữ liệu thật không?
-- Ticket chỉ được tạo sau xác nhận rõ chưa?
-- Tool result error nào cần review thủ công?
+- [ ] Khong tu doan asset ID/employee ID.
+- [ ] Khong co password, MFA code, token, API key, recovery code hay du lieu that trong transcript/ticket.
+- [ ] Ticket chi tao sau confirmation ro cho payload hien tai.
+- [ ] Tool result errors da duoc review thu cong.
 
-## B7. Technical reflection
+## B7. Verification commands
 
-- Fix nào thuộc `system_prompt.md`?
-- Fix nào thuộc `tools.yaml`?
-- Failure nào không thể chỉ nhìn automatic score?
-- Nếu có thêm một vòng, nhóm sẽ thử hypothesis nào?
+```powershell
+cd starter_v0
+py -3 -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install -r requirements.txt
+streamlit run app.py
+python scripts/preflight_provider.py --provider <provider>
+python run_eval.py --provider <provider> --version v3 --suite base --eval-cases data/eval_base.json
+python run_eval.py --provider <provider> --version v3 --suite group --eval-cases data/eval_group.json
+python run_eval.py --provider <provider> --version v3 --suite adversarial --eval-cases data/eval_adversarial.json
+```
+
+## B8. Limitations and next hypothesis
+
+- Provider output phu thuoc model/API key; metric chi dai dien cho run da luu.
+- Ticket store la local mock, khong phai production backend.
+- UI khong thay the manual safety review.
+- Hypothesis tiep theo: neu nguoi dung sua summary/priority/asset sau confirmation, agent phai yeu cau xac nhan lai cho payload moi.
 
 # PHẦN C — Checkout trước khi nộp
 

@@ -1,0 +1,34 @@
+{
+  "session_id": "ui_1411d3ede31d4d7ebbb89639c6613bf9",
+  "version": "v3",
+  "artifact_version": "v3+p27467914bc4d+td4848549884e",
+  "timestamp": "2026-09-15T11:59:47+00:00",
+  "updated_at": "2026-09-15T12:02:19+00:00",
+  "provider": "gemini",
+  "model": null,
+  "system_prompt": "artifacts/system_prompt.md",
+  "tools": "artifacts/tools.yaml",
+  "messages": [
+    {
+      "timestamp": "2026-09-15T12:00:05+00:00",
+      "user_input": "con cá có mấy chân",
+      "assistant_text": "{\n  \"intent\": \"out_of_scope\",\n  \"action\": \"reject\",\n  \"reply\": \"Tôi là trợ lý hỗ trợ kỹ thuật nội bộ của Northstar Labs. Tôi có thể giúp bạn kiểm tra thiết bị, tra cứu chính sách CNTT, tìm kiếm hướng dẫn kỹ thuật hoặc tạo ticket hỗ trợ. Câu hỏi của bạn nằm ngoài phạm vi hỗ trợ của tôi.\",\n  \"evidence_ids\": []\n}",
+      "tool_calls": [],
+      "tool_results": [],
+      "error_logs": []
+    },
+    {
+      "timestamp": "2026-09-15T12:02:19+00:00",
+      "user_input": "Khi nào công ty chuyển lương tháng này vậy bạn?",
+      "assistant_text": "Provider error: ClientError: 429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'Resource has been exhausted (e.g. check quota).', 'status': 'RESOURCE_EXHAUSTED'}}",
+      "tool_calls": [],
+      "tool_results": [],
+      "error_logs": [
+        {
+          "type": "ClientError",
+          "message": "429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'Resource has been exhausted (e.g. check quota).', 'status': 'RESOURCE_EXHAUSTED'}}"
+        }
+      ]
+    }
+  ]
+}
