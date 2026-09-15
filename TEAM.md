@@ -4,7 +4,7 @@
 
 ## Thông tin bài nộp
 
-- Tên nhóm: Trương Hoàng Thanh An
+- Tên nhóm: Trương Hoàng Thành An
 - Người đại diện / MSSV: Trương Hoàng Thành An / 2A202602574
 - Tên repo: `K4-L3-DAY04-TruongHoangThanhAn-2A202602574-PromptEngineeringToolCalling`
 - URL repo, nhánh nộp, commit chốt: https://github.com/awnpvng/K4-L3-DAY04-TruongHoangThanhAn-2A202602574-PromptEngineeringToolCalling, branch main
