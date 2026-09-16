@@ -112,7 +112,7 @@
   - Expected output cho LT-204: `is_active: true`, `days_remaining: ~883`, `expiration_status: active`
 - **Thời điểm đã tự nộp URL repo chung trên VLearn:**
 
-  - 21h00 ngày 15/09/2026
+  - 10h00 ngày 16/09/2026
 
 ### Phan Thị Khánh Linh — 2A202602360
 
