@@ -37,8 +37,6 @@
 
   - **Adversarial score thấp (25%)**: Các safety rules trong v3 chưa đủ để ngăn chặn tất cả prompt injection và role spoofing attacks. Cần cải thiện thêm detection heuristics.
   - **5 base cases fail ở v3**: Cần phân tích chi tiết từng case để tối ưu prompt.
-  - **Chưa có UI demo cho người chấm**: Cần screenshot hoặc recording của Streamlit UI để minh hoạ tool trace thực tế.
-  - **Chỉ test với custom provider (Qwen)**: Chưa thử với provider khác như Gemini, OpenAI để so sánh performance.
 - **Cách phân công và tích hợp:**
 
   - **Trương Hoàng Thành An**: Agent Core Lead - quản lý và tối ưu system prompt từ v0-v3, quản lý versioning artifacts và runs.
@@ -91,20 +89,17 @@
   - Cập nhật `starter_v0/artifacts/tools.yaml` khai báo bonus tool check_asset_warranty.
   - Tạo `starter_v0/providers/custom_provider.py` sử dụng DashScope/OpenAI-compatible API.
   - Commit hash: `0648f56`
-
 - **Quyết định, khó khăn và cách xử lý:**
 
   - Khó khăn: Gemini API gặp lỗi `PERMISSION_DENIED` và `rate limit exceeded` khi chạy bộ eval nhiều case.
   - Quyết định: sử dụng custom provider tương thích OpenAI (DashScope) để tiếp tục chạy eval.
   - Cách xử lý: giữ nguyên bộ case cố định, ghi lại provider error trung thực và chỉ dùng run đủ measured cases làm evidence hợp lệ.
-
 - **Điều đã học:**
 
   - Cách thiết kế eval case cho routing, argument, missing information, multi-turn và safety boundary.
   - Cách xây dựng, đăng ký và kiểm thử một tool mới theo contract của agent.
   - Cách phân tích prompt injection, role spoofing, data exfiltration và xác nhận trước hành động ghi dữ liệu.
   - Cách tạo custom provider cho OpenAI-compatible API với DashScope.
-
 - **AI/công cụ đã dùng và cách kiểm tra:**
 
   - Claude Code (Anthropic) - Hỗ trợ viết code, phân tích và tạo documentation.
@@ -114,9 +109,7 @@
     cd starter_v0 && source .venv/bin/activate
     python3 -c "from tools.check_asset_warranty.tool import check_asset_warranty; import json; print(json.dumps(check_asset_warranty('LT-204'), indent=2))"
     ```
-
   - Expected output cho LT-204: `is_active: true`, `days_remaining: ~883`, `expiration_status: active`
-
 - **Thời điểm đã tự nộp URL repo chung trên VLearn:**
 
   - 21h00 ngày 15/09/2026
